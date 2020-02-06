@@ -1,8 +1,9 @@
 import React from 'react';
 import Rating from '../Rating/Rating';
-import BookmarksContext from '../BookmarksContext'
-import PropTypes from 'prop-types'
-import config from '../config'
+import { Link } from 'react-router-dom';
+import BookmarksContext from '../BookmarksContext';
+import PropTypes from 'prop-types';
+import config from '../config';
 import './BookmarkItem.css';
 
 function deleteBookmarkRequest(bookmarkId, cb) {
@@ -16,10 +17,7 @@ function deleteBookmarkRequest(bookmarkId, cb) {
     .then(res => {
       if (!res.ok) {
         // get the error message from the response,
-        return res.json().then(error => {
-          // then throw it
-          throw error
-        })
+        return res.json().then(error => Promise.reject(error))
       }
       return res.json()
     })
@@ -28,7 +26,7 @@ function deleteBookmarkRequest(bookmarkId, cb) {
       cb(bookmarkId)
     })
     .catch(error => {
-      console.log(error)
+      console.error(error)
     })
 }
 
@@ -52,14 +50,18 @@ export default function BookmarkItem(props) {
             {props.description}
           </p>
           <div className='BookmarkItem__buttons'>
+            <Link to={`/edit/$props.id`}>
+              Edit
+            </Link>
+            {' '}
             <button
               className='BookmarkItem__description'
-              onClick={() => {
+              onClick={() => 
                 deleteBookmarkRequest(
                   props.id,
-                  context.deleteBookmark,
+                  context.deleteBookmark
                 )
-              }}
+              }
             >
               Delete
             </button>
@@ -74,33 +76,18 @@ BookmarkItem.defaultProps = {
   onClickDelete: () => {},
 }
 
-BookmarkItem.propTypes = {
-  title: PropTypes.string.isRequired,
-  url: (props, propName, componentName) => {
-    // get the value of the prop
-    const prop = props[propName];
-
-    // do the isRequired check
-    if(!prop) {
-      return new Error(`${propName} is required in ${componentName}. Validation Failed`);
-    }
-
-    // check the type
-    if (typeof prop != 'string') {
-      return new Error(`Invalid prop, ${propName} is expected to be a string in ${componentName}. ${typeof prop} found.`);
-    }
-
-    // do the custom check here
-    // using a simple regex
-    if (prop.length < 5 || !prop.match(new RegExp(/^https?:\/\//))) {
-      return new Error(`Invalid prop, ${propName} must be min length 5 and begin http(s)://. Validation Failed.`);
-    }
-  },
-  rating: PropTypes.number,
-  description: PropTypes.string
-};
-
 BookmarkItem.defaultProps = {
-  rating: 1,
-  description: ""
-};
+  onClickDelete: () => {},
+}
+
+BookmarkItem.propTypes = {
+  id: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string,
+  ]).isRequired,
+  title: PropTypes.string.isRequired,
+  url: PropTypes.string.isRequired,
+  desciption: PropTypes.string,
+  rating: PropTypes.number.isRequired,
+  onClickDelete: PropTypes.func,
+}
